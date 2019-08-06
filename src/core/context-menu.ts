@@ -29,8 +29,7 @@ export const showContextMenu = (menu: HTMLElement): EventHandler => (
             left: `0px`,
             top: `0px`,
             width: `${containerBoundingBox.width}px`,
-            height: `${containerBoundingBox.height}px`,
-            border: "1px solid #000"
+            height: `${containerBoundingBox.height}px`
           }
         });
       }
@@ -38,11 +37,9 @@ export const showContextMenu = (menu: HTMLElement): EventHandler => (
       // set styles for the menu
       setStylesForElement(menu, {
         position: "absolute",
-        left: `${boundingBox.x1}px`,
-        top: `${boundingBox.y1}px`,
-        width: `${boundingBox.w}px`,
-        height: `${boundingBox.h}px`,
-        border: "1px solid #000"
+        left: `${boundingBox.x1 + boundingBox.w}px`,
+        top: `${boundingBox.y1 - 96 + boundingBox.h / 2}px`,
+        width: `64px`,
       });
       menuContainer.appendChild(menu);
 
@@ -74,8 +71,7 @@ export const createMenu = (items: MenuItem[]): HTMLElement => {
     classes: "menu",
     styles: {
       display: "flex",
-      alignItems: "center",
-      justifyContent: "center"
+      flexDirection: "column",
     }
   });
 
@@ -88,7 +84,15 @@ export const createMenu = (items: MenuItem[]): HTMLElement => {
       styles: {
         display: "flex",
         alignItems: "center",
-        justifyContent: "flex-start"
+        justifyContent: "center",
+        width: "56px",
+        height: "56px",
+        borderRadius: "50%",
+        boxShadow: "0px 0px 8px 0px rgba(0, 0, 0, 0.40)",
+        marginTop: "4px",
+        marginBottom: "4px",
+        backgroundColor: item.color,
+        cursor: "pointer"
       }
     });
 
@@ -97,21 +101,18 @@ export const createMenu = (items: MenuItem[]): HTMLElement => {
       const icon = createElement({
         tag: "img",
         classes: "icon",
-        styles: {
-          marginRight: "8px"
-        }
       });
       icon.setAttribute("src", item.icon);
       menuItem.appendChild(icon);
+    } else {
+      // create title
+      const title = createElement({
+        tag: "p",
+        classes: "title"
+      });
+      title.innerHTML = item.title;
+      menuItem.appendChild(title);
     }
-
-    // create title
-    const title = createElement({
-      tag: "p",
-      classes: "title"
-    });
-    title.innerHTML = item.title;
-    menuItem.appendChild(title);
 
     // add click handler
     menuItem.onclick = item.onClick;

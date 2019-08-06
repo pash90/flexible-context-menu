@@ -16,5 +16,6 @@ export default function extension(this: Core, items: MenuItem[]): Core {
 export interface MenuItem {
   icon?: any;
   title: string;
+  color: string
   onClick(): void;
 }
