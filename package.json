@@ -1,6 +1,6 @@
 {
   "name": "cytoscape-flexible-context-menu",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "A flexible context menu for Cytoscape",
   "main": "./dist/index.common.js",
   "module": "./dist/index.esm.js",
@@ -23,7 +23,7 @@
     "copyright": "update license",
     "lint": "tslint -c ./tslint.json 'src/**/*.ts'",
     "lint:fix": "tslint -c ./tslint.json src/**/*.ts --fix",
-    "build": "rollup -c"
+    "build": "rm -rf dist && rollup -c"
   },
   "repository": {
     "type": "git",
