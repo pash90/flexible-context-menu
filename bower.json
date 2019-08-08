@@ -1,13 +1,13 @@
 {
-  "name": "cytoscape-flexible-context-menu",
+  "name": "flexible-context-menu",
   "description": "A flexible context menu for Cytoscape",
-  "main": "cytoscape-flexible-context-menu.js",
+  "main": "flexible-context-menu.js",
   "dependencies": {
     "cytoscape": "^3.2.0"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/stackchat-ai/flexible-context-menu.git"
+    "url": "https://github.com/pash90/flexible-context-menu.git"
   },
   "ignore": [
     "**/.*",
