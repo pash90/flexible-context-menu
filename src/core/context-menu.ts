@@ -331,12 +331,10 @@ const unanimateMenuItems = () => {
     {
       opacity: "1",
       left: `${nodeBoundingBox!.x1 + nodeBoundingBox!.w / 2 + 20}px`,
-      top: `${nodeBoundingBox!.y1 + nodeBoundingBox!.h - 16}px`,
     },
     {
       opacity: "0",
       left: `${nodeBoundingBox!.x1 + nodeBoundingBox!.w / 2 - 16}px`,
-      top: `${nodeBoundingBox!.y1 + nodeBoundingBox!.h / 2 - 16}px`,
     }
   ], {
       duration: ANIMATION_DURATION,
