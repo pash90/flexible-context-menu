@@ -54,6 +54,12 @@ export const showContextMenu = (options: Options): EventHandler => (
 
         menuContainer.appendChild(menu);
 
+        menuContainer.onclick = (e) => {
+          e.stopImmediatePropagation();
+
+          removeMenu(true);
+        }
+
         // show the menu
         document.body.appendChild(menuContainer);
 
@@ -225,18 +231,15 @@ interface Bounds {
  * respect to the selected node
  */
 const getBounds = (): Bounds => {
+  const r = nodeBoundingBox!.w / 2
   return {
     center: {
       x: nodeBoundingBox!.x1 + nodeBoundingBox!.w / 2,
       y: nodeBoundingBox!.y1 + nodeBoundingBox!.h / 2
     },
-    radius: nodeBoundingBox!.w / 2 < 72 ? 72 : nodeBoundingBox!.w / 2
+    radius: r < 80 ? 80 : r > 120 ? 120 : r
   }
 }
-
-// const getAngleForOddNumberOfItems = (index: number, total: number) => (1 + (2 * index) - total) * 22.5
-
-// const getAngleForEvenNumberOfItems = (index: number, total: number) => (1 + (2 * index) - total) * 22.5
 
 /**
  * Calculates the final x & y coordinates for a menu item
@@ -245,11 +248,7 @@ const getBounds = (): Bounds => {
  * @param {Bounds} bounds
  */
 const getPositionForItemWithIndex = (index: number, numberOfItems: number, bounds: Bounds) => {
-  // const angle = numberOfItems % 2 === 0 ?
-  //   getAngleForEvenNumberOfItems(index, numberOfItems) :
-  //   getAngleForOddNumberOfItems(index, numberOfItems)
-
-  const angle = -22.5 * (numberOfItems - 1 - (2 * index))
+  const angle = (numberOfItems % 2 === 0 ? -45 : -22.5) * (numberOfItems - 1 - (2 * index)) * Math.PI / 180
 
   const calculatedPosition = {
     left: bounds.center.x + bounds.radius * Math.cos(angle),
