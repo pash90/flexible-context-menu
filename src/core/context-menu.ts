@@ -1,83 +1,115 @@
-import { BoundingBoxWH, EventHandler, EventObject } from "cytoscape";
-import { MenuItem } from ".";
-import { createElement, setStylesForElement } from "./dom-utils";
+import { BoundingBoxWH, EventHandler, EventObject, NodeSingular } from "cytoscape";
+import { MenuItem, Options } from ".";
+import { createElement } from "./dom-utils";
 
-export const showContextMenu = (menu: HTMLElement): EventHandler => (
+const ANIMATION_DURATION = 150
+let currentTarget: NodeSingular | null = null
+let nodeBoundingBox: BoundingBoxWH | null = null
+
+/**
+ * Displays a context menu for the selected node in the graph
+ * @param {MenuItem[]} items The items to display in the contextual menu
+ */
+export const showContextMenu = (options: Options): EventHandler => (
   event: EventObject
 ): void => {
   const selectedNodes = event.cy.nodes(":selected");
   const container = event.cy.container();
-  let menuContainer = document.getElementById("menu-container");
 
   if (container) {
     if (selectedNodes.length === 1) {
-      // this is where we show the context menu
-      const node = selectedNodes[0];
-      const containerBoundingBox = container.getBoundingClientRect();
+      // update current target
+      currentTarget = selectedNodes[0];
+      hideContextMenu(event);
+      currentTarget.select();
 
-      // This is the position relative to which we will show the menu
-      const boundingBox = node.renderedBoundingBox({}) as BoundingBoxWH
+      if (options.conditions.overall(currentTarget)) {
+        let menuContainer = document.getElementById("menu-container");
 
-      // create a container for the menu
-      if (!menuContainer) {
-        menuContainer = createElement({
-          tag: "div",
-          classes: "menu-container",
-          id: "menu-container",
-          styles: {
-            position: "absolute",
-            left: `0px`,
-            top: `0px`,
-            width: `${containerBoundingBox.width}px`,
-            height: `${containerBoundingBox.height}px`
-          }
-        });
+        // this is where we show the context menu
+        const containerBoundingBox = container.getBoundingClientRect();
+
+        // This is the position relative to which we will show the menu
+        nodeBoundingBox = currentTarget.renderedBoundingBox({}) as BoundingBoxWH
+
+        // create a container for the menu
+        if (!menuContainer) {
+          menuContainer = createElement({
+            tag: "div",
+            classes: "menu-container",
+            id: "menu-container",
+            styles: {
+              position: "absolute",
+              left: `${containerBoundingBox.left}px`,
+              top: `${containerBoundingBox.top}px`,
+              width: `${containerBoundingBox.width}px`,
+              height: `${containerBoundingBox.height}px`,
+              zIndex: "10"
+            }
+          });
+        }
+
+        // set styles for the menu
+        const menu = createMenu(options);
+
+        menuContainer.appendChild(menu);
+
+        // show the menu
+        document.body.appendChild(menuContainer);
+
+        // animate the menu
+        animateMenuItems()
       }
-
-      // set styles for the menu
-      setStylesForElement(menu, {
-        position: "absolute",
-        left: `${boundingBox.x1 + boundingBox.w}px`,
-        top: `${boundingBox.y1 - 96 + boundingBox.h / 2}px`,
-        width: `64px`,
-      });
-      menuContainer.appendChild(menu);
-
-      // show the menu
-      container.appendChild(menuContainer);
     }
   }
 };
 
-export const hideContextMenu: EventHandler = (event) => {
-  const container = event.cy.container()
+/**
+ * Hides the context menu and deselects the selected element
+ * @param {EventObject} event The Cytoscape event that triggered the function
+ */
+export const hideContextMenu: EventHandler = (event) => removeMenu(true)
+
+/**
+ * Removes the menu from the window
+ * @param {boolean} unselectTarget Whether or not to unselect the selected element
+ */
+const removeMenu = (unselectTarget: boolean = false) => {
+
   const menuContainer = document.getElementById("menu-container");
-  const selectedNodes = event.cy.nodes(":selected")
 
-  if (container && menuContainer) {
-    container.removeChild(menuContainer)
-  }
+  if (menuContainer) {
+    unanimateMenuItems();
 
-  // unselect the selected node
-  if (selectedNodes.length === 1) {
-    selectedNodes[0].unselect();
+    window.setTimeout(() => {
+      document.body.removeChild(menuContainer);
+      if (currentTarget && unselectTarget) {
+        currentTarget.unselect();
+      }
+    }, ANIMATION_DURATION)
   }
 }
 
-export const createMenu = (items: MenuItem[]): HTMLElement => {
+/**
+ * Creates a contextual menu for the selected node
+ * @param {Options} options
+ * @param {BoundingBoxWH} boundingBox The bounding box for the selected node in the graph
+ */
+export const createMenu = (options: Options): HTMLElement => {
+  const { items, closeIcon, conditions: { menuItem: condition } } = options;
+
   // Holder for all the elements of the context menu
   const menu = createElement({
     tag: "div",
-    classes: "menu",
-    styles: {
-      display: "flex",
-      flexDirection: "column",
-    }
+    id: "menu"
   });
 
+  const bounds = getBounds();
+
   // Create menu items
-  items.forEach((item) => {
+  items.forEach((item, index) => {
     // Create item container
+    const isItemInteractable = condition(item.title, currentTarget!);
     const menuItem = createElement({
       tag: "div",
       classes: "menu-item",
@@ -88,11 +120,12 @@ export const createMenu = (items: MenuItem[]): HTMLElement => {
         width: "56px",
         height: "56px",
         borderRadius: "50%",
-        boxShadow: "0px 0px 8px 0px rgba(0, 0, 0, 0.40)",
-        marginTop: "4px",
-        marginBottom: "4px",
-        backgroundColor: item.color,
-        cursor: "pointer"
+        boxShadow: "0px 0px 16px 8px rgba(0, 0, 0, 0.32)",
+        backgroundColor: isItemInteractable ? item.color : "#d8d8d8",
+        cursor: isItemInteractable ? "pointer" : "not-allowed",
+        position: "absolute",
+        zIndex: "10",
+        ...getPositionForItemWithIndex(index, items.length, bounds)
       }
     });
 
@@ -115,11 +148,200 @@ export const createMenu = (items: MenuItem[]): HTMLElement => {
     }
 
     // add click handler
-    menuItem.onclick = item.onClick;
+    menuItem.onclick = isItemInteractable ?
+      (e) => {
+        e.stopImmediatePropagation();
+
+        // remove the menu
+        removeMenu();
+
+        // invoke
+        window.setTimeout(item.onClick, ANIMATION_DURATION)
+      } :
+      (e) => e.stopImmediatePropagation()
 
     // add to container;
     menu.appendChild(menuItem);
   });
 
+  // add close button
+  menu.appendChild(getCloseButton(closeIcon))
+
   return menu;
 };
+
+/**
+ * Creates a close button to dismiss the contextual menu
+ * @param {any} icon
+ * @param {BoundingBoxWH} boundingBox
+ */
+const getCloseButton = (icon: any): HTMLElement => {
+  const closeItem = createElement({
+    tag: "div",
+    id: "close-button",
+    styles: {
+      width: "32px",
+      height: "32px",
+      position: "absolute",
+      left: `${nodeBoundingBox!.x1 + nodeBoundingBox!.w / 2 + 20}px`,
+      top: `${nodeBoundingBox!.y1 + nodeBoundingBox!.h / 2 - 16}px`,
+      backgroundColor: "#d8d8d8",
+      cursor: "pointer",
+      borderRadius: "50%",
+      boxShadow: "0px 0px 16px 8px rgba(0, 0, 0, 0.32)",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      opacity: "1"
+    }
+  })
+
+  // add icon
+  const closeIcon = createElement({
+    tag: "img"
+  })
+  closeIcon.setAttribute("src", icon);
+  closeItem.appendChild(closeIcon)
+  closeItem.onclick = (e) => {
+    e.stopImmediatePropagation();
+    removeMenu(true);
+  }
+
+  return closeItem;
+}
+
+interface Bounds {
+  /** Center of the circle */
+  center: {
+    x: number
+    y: number
+  }
+  /** The radius of the circle around which to display the items */
+  radius: number
+}
+
+/**
+ * Calculates the bounds for the context menu with
+ * respect to the selected node
+ */
+const getBounds = (): Bounds => {
+  return {
+    center: {
+      x: nodeBoundingBox!.x1 + nodeBoundingBox!.w / 2,
+      y: nodeBoundingBox!.y1 + nodeBoundingBox!.h / 2
+    },
+    radius: nodeBoundingBox!.w / 2 < 72 ? 72 : nodeBoundingBox!.w / 2
+  }
+}
+
+// const getAngleForOddNumberOfItems = (index: number, total: number) => (1 + (2 * index) - total) * 22.5
+
+// const getAngleForEvenNumberOfItems = (index: number, total: number) => (1 + (2 * index) - total) * 22.5
+
+/**
+ * Calculates the final x & y coordinates for a menu item
+ * @param {number} index
+ * @param {number} numberOfItems
+ * @param {Bounds} bounds
+ */
+const getPositionForItemWithIndex = (index: number, numberOfItems: number, bounds: Bounds) => {
+  // const angle = numberOfItems % 2 === 0 ?
+  //   getAngleForEvenNumberOfItems(index, numberOfItems) :
+  //   getAngleForOddNumberOfItems(index, numberOfItems)
+
+  const angle = -22.5 * (numberOfItems - 1 - (2 * index))
+
+  const calculatedPosition = {
+    left: bounds.center.x + bounds.radius * Math.cos(angle),
+    top: bounds.center.y + bounds.radius * Math.sin(angle) - 28
+  }
+
+  return {
+    left: `${calculatedPosition.left}px`,
+    top: `${calculatedPosition.top}px`
+  }
+}
+
+/** Animates each menu item from their initial to final position */
+const animateMenuItems = () => {
+  const menuItems = document.querySelectorAll(".menu-item");
+  const closeButton = document.getElementById("close-button") as HTMLDivElement
+
+  const bounds = getBounds()
+
+  menuItems.forEach((menuItem, index) => {
+    menuItem.animate([
+      {
+        opacity: 0,
+        left: `${nodeBoundingBox!.x1 + nodeBoundingBox!.w / 2 - 28}px`,
+        top: `${nodeBoundingBox!.y1 + nodeBoundingBox!.h / 2 - 28}px`
+      },
+      {
+        opacity: 1,
+        ...getPositionForItemWithIndex(index, menuItems.length, bounds)
+      },
+    ], {
+        duration: ANIMATION_DURATION,
+        direction: "normal",
+        easing: "ease-in-out"
+      })
+  })
+
+  closeButton.animate([
+    {
+      opacity: "0",
+      left: `${nodeBoundingBox!.x1 + nodeBoundingBox!.w / 2 - 16}px`,
+    },
+    {
+      opacity: "1",
+      left: `${nodeBoundingBox!.x1 + nodeBoundingBox!.w / 2 + 20}px`,
+    }
+  ], {
+      duration: ANIMATION_DURATION,
+      direction: "normal",
+      easing: "ease-in-out"
+    })
+}
+
+/** Returns each menu item to its original position */
+const unanimateMenuItems = () => {
+  const menuItems = document.querySelectorAll(".menu-item");
+  const closeButton = document.getElementById("close-button") as HTMLDivElement
+
+  const bounds = getBounds()
+
+  menuItems.forEach((menuItem, index) => {
+    menuItem.animate([
+      {
+        opacity: 1,
+        ...getPositionForItemWithIndex(index, menuItems.length, bounds)
+      },
+      {
+        opacity: 0,
+        left: `${nodeBoundingBox!.x1 + nodeBoundingBox!.w / 2 - 28}px`,
+        top: `${nodeBoundingBox!.y1 + nodeBoundingBox!.h / 2 - 28}px`
+      }
+    ], {
+        duration: ANIMATION_DURATION,
+        direction: "normal",
+        easing: "ease-in-out"
+      })
+  })
+
+  closeButton.animate([
+    {
+      opacity: "1",
+      left: `${nodeBoundingBox!.x1 + nodeBoundingBox!.w / 2 + 20}px`,
+      top: `${nodeBoundingBox!.y1 + nodeBoundingBox!.h - 16}px`,
+    },
+    {
+      opacity: "0",
+      left: `${nodeBoundingBox!.x1 + nodeBoundingBox!.w / 2 - 16}px`,
+      top: `${nodeBoundingBox!.y1 + nodeBoundingBox!.h / 2 - 16}px`,
+    }
+  ], {
+      duration: ANIMATION_DURATION,
+      direction: "normal",
+      easing: "ease-in-out"
+    })
+}

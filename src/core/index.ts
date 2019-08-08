@@ -1,5 +1,32 @@
-import { Core } from "cytoscape";
-import { createMenu, hideContextMenu, showContextMenu } from "./context-menu";
+import { Core, EventObject, NodeSingular } from "cytoscape";
+import { hideContextMenu, showContextMenu } from "./context-menu";
+
+export interface MenuItem {
+  icon?: any;
+  title: string;
+  color: string
+  onClick(): void;
+}
+
+export interface Options {
+  items: MenuItem[]
+  closeIcon: any
+  /**
+   * The condition under which to display
+   * the contextual menu and the menu items
+   */
+  conditions: {
+    // TODO: enable menu for edges
+    // type: "node" | "edge"
+    /** The condition check for contextual menu */
+    overall(currentTarget: NodeSingular): boolean
+    /**
+     * The condition check for individual menu items.
+     * It is checked once for every menu item
+     */
+    menuItem(itemTitle: string, currentTarget: NodeSingular): boolean
+  }
+}
 
 /**
  *
@@ -10,21 +37,17 @@ import { createMenu, hideContextMenu, showContextMenu } from "./context-menu";
  * CONVERTED TO ES6, IT LOOSES THE CONTEXT FOR `this` WHICH
  * IS REQUIRED TO MAKE AN EXTENSION WORK.
  */
-export default function extension(this: Core, items: MenuItem[]): Core {
-  const menu = createMenu(items);
-
+export default function extension(this: Core, options: Options): Core {
   // Event listener to show the menu
-  this.on("singleclick", "node", showContextMenu(menu));
+  this.on("singleclick", "node", showContextMenu(options));
 
   // Event listeners to hide the menu
   this.on("drag zoom pan", hideContextMenu);
+  this.on("click", (e) => {
+    if (e.target === e.cy) {
+      hideContextMenu(e);
+    }
+  })
 
   return this;
 };
-
-export interface MenuItem {
-  icon?: any;
-  title: string;
-  color: string
-  onClick(): void;
-}

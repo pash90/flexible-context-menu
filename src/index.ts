@@ -1,4 +1,4 @@
-import extension, { MenuItem } from "./core";
+import extension, { Options } from "./core";
 
 export default function register(cy?: any): void {
   if (!cy) {
@@ -29,6 +29,6 @@ import "cytoscape";
 
 declare module "cytoscape" {
   interface Core {
-    flexibleContextMenu(items: MenuItem[]): void;
+    flexibleContextMenu(options: Options): void;
   }
 }
