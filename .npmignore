@@ -8,3 +8,4 @@ src/
 dist/index.html
 rollup.config.js
 tsconfig.json
+CHANGELOG.md
