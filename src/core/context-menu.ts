@@ -65,6 +65,8 @@ export const showContextMenu = (options: Options): EventHandler => (
 
         // animate the menu
         animateMenuItems()
+      } else {
+        currentTarget.unselect();
       }
     }
   }
