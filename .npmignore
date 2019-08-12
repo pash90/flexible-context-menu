@@ -4,7 +4,7 @@
 .eslintrc
 .prettierrc
 node_modules/
-src/
+src/*
 dist/index.html
 rollup.config.js
 tsconfig.json
