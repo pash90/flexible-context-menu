@@ -113,6 +113,9 @@
                     // animate the menu
                     animateMenuItems();
                 }
+                else {
+                    currentTarget.unselect();
+                }
             }
         }
     }; };

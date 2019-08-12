@@ -109,6 +109,9 @@ var showContextMenu = function (options) { return function (event) {
                 // animate the menu
                 animateMenuItems();
             }
+            else {
+                currentTarget.unselect();
+            }
         }
     }
 }; };
