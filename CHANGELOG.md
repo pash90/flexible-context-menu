@@ -1,5 +1,9 @@
 # Changelog
 
+## August 18, 2019 - 1.0.3
+
+- Exports `Options` interface too
+
 ## August 12, 2019 - 1.0.2
 
 - Fixed an issue the element for which the overall conditions fails remains selected 

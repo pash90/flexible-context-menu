@@ -32,3 +32,5 @@ declare module "cytoscape" {
     flexibleContextMenu(options: Options): void;
   }
 }
+
+export { Options }
