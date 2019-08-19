@@ -73,8 +73,6 @@ var showContextMenu = function (options) { return function (event) {
         if (selectedNodes.length === 1) {
             // update current target
             currentTarget = selectedNodes[0];
-            hideContextMenu();
-            currentTarget.select();
             if (options.conditions.overall(currentTarget)) {
                 var menuContainer = document.getElementById("menu-container");
                 // this is where we show the context menu
@@ -130,11 +128,13 @@ var removeMenu = function (unselectTarget) {
     if (menuContainer) {
         unanimateMenuItems();
         window.setTimeout(function () {
-            document.body.removeChild(menuContainer);
-            if (currentTarget && unselectTarget) {
-                currentTarget.unselect();
+            if (menuContainer) {
+                document.body.removeChild(menuContainer);
+                if (currentTarget && unselectTarget) {
+                    currentTarget.unselect();
+                }
             }
-        }, ANIMATION_DURATION);
+        }, ANIMATION_DURATION / 2);
     }
 };
 /**
@@ -157,7 +157,9 @@ var createMenu = function (options) {
         var menuItem = createElement({
             tag: "div",
             classes: "menu-item",
-            styles: __assign({ display: "flex", alignItems: "center", justifyContent: "center", width: "56px", height: "56px", borderRadius: "50%", boxShadow: "0px 0px 16px 8px rgba(0, 0, 0, 0.32)", backgroundColor: isItemInteractable ? item.color : "#d8d8d8", cursor: isItemInteractable ? "pointer" : "not-allowed", position: "absolute", zIndex: "10" }, getPositionForItemWithIndex(index, items.length, bounds))
+            styles: __assign({ display: "flex", alignItems: "center", justifyContent: "center", width: "56px", height: "56px", borderRadius: "50%", 
+                // border: `2px solid ${isItemInteractable ? item.color : "#d8d8d8"}`,
+                boxShadow: "0px 0px 16px 8px rgba(0, 0, 0, 0.16)", backgroundColor: isItemInteractable ? "#ffffff" : "#d8d8d8", cursor: isItemInteractable ? "pointer" : "not-allowed", position: "absolute", zIndex: "10" }, getPositionForItemWithIndex(index, items.length, bounds))
         });
         // create icon
         if (item.icon) {
@@ -184,7 +186,7 @@ var createMenu = function (options) {
                 // remove the menu
                 removeMenu();
                 // invoke
-                window.setTimeout(item.onClick, ANIMATION_DURATION);
+                window.setTimeout(item.onClick, ANIMATION_DURATION / 2);
             } :
             function (e) { return e.stopImmediatePropagation(); };
         // add to container;
@@ -310,7 +312,7 @@ var unanimateMenuItems = function () {
                 top: nodeBoundingBox.y1 + nodeBoundingBox.h / 2 - 28 + "px"
             }
         ], {
-            duration: ANIMATION_DURATION,
+            duration: ANIMATION_DURATION / 2,
             direction: "normal",
             easing: "ease-in-out"
         });
@@ -325,7 +327,7 @@ var unanimateMenuItems = function () {
             left: nodeBoundingBox.x1 + nodeBoundingBox.w / 2 - 16 + "px",
         }
     ], {
-        duration: ANIMATION_DURATION,
+        duration: ANIMATION_DURATION / 2,
         direction: "normal",
         easing: "ease-in-out"
     });
