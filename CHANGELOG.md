@@ -1,5 +1,10 @@
 # Changelog
 
+## August 20, 2019 - 1.0.4
+
+- Closing the context menu takes half the time pf opening it up instead of equal time durations
+- Inverted menu item colors
+
 ## August 18, 2019 - 1.0.3
 
 - Exports `Options` interface too
