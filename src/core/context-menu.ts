@@ -20,8 +20,6 @@ export const showContextMenu = (options: Options): EventHandler => (
     if (selectedNodes.length === 1) {
       // update current target
       currentTarget = selectedNodes[0];
-      hideContextMenu(event);
-      currentTarget.select();
 
       if (options.conditions.overall(currentTarget)) {
         let menuContainer = document.getElementById("menu-container");
@@ -90,11 +88,13 @@ const removeMenu = (unselectTarget: boolean = false) => {
     unanimateMenuItems();
 
     window.setTimeout(() => {
-      document.body.removeChild(menuContainer);
-      if (currentTarget && unselectTarget) {
-        currentTarget.unselect();
+      if (menuContainer) {
+        document.body.removeChild(menuContainer);
+        if (currentTarget && unselectTarget) {
+          currentTarget.unselect();
+        }
       }
-    }, ANIMATION_DURATION)
+    }, ANIMATION_DURATION / 2)
   }
 }
 
@@ -128,8 +128,9 @@ export const createMenu = (options: Options): HTMLElement => {
         width: "56px",
         height: "56px",
         borderRadius: "50%",
-        boxShadow: "0px 0px 16px 8px rgba(0, 0, 0, 0.32)",
-        backgroundColor: isItemInteractable ? item.color : "#d8d8d8",
+        // border: `2px solid ${isItemInteractable ? item.color : "#d8d8d8"}`,
+        boxShadow: "0px 0px 16px 8px rgba(0, 0, 0, 0.16)",
+        backgroundColor: isItemInteractable ? "#ffffff" : "#d8d8d8",
         cursor: isItemInteractable ? "pointer" : "not-allowed",
         position: "absolute",
         zIndex: "10",
@@ -164,7 +165,7 @@ export const createMenu = (options: Options): HTMLElement => {
         removeMenu();
 
         // invoke
-        window.setTimeout(item.onClick, ANIMATION_DURATION)
+        window.setTimeout(item.onClick, ANIMATION_DURATION / 2)
       } :
       (e) => e.stopImmediatePropagation()
 
@@ -323,7 +324,7 @@ const unanimateMenuItems = () => {
         top: `${nodeBoundingBox!.y1 + nodeBoundingBox!.h / 2 - 28}px`
       }
     ], {
-        duration: ANIMATION_DURATION,
+        duration: ANIMATION_DURATION / 2,
         direction: "normal",
         easing: "ease-in-out"
       })
@@ -339,7 +340,7 @@ const unanimateMenuItems = () => {
       left: `${nodeBoundingBox!.x1 + nodeBoundingBox!.w / 2 - 16}px`,
     }
   ], {
-      duration: ANIMATION_DURATION,
+      duration: ANIMATION_DURATION / 2,
       direction: "normal",
       easing: "ease-in-out"
     })
