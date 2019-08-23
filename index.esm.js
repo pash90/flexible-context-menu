@@ -62,57 +62,67 @@ var setStylesForElement = function (element, styles) {
 var ANIMATION_DURATION = 150;
 var currentTarget = null;
 var nodeBoundingBox = null;
+var menuIsCurrentlyVisible = false;
 /**
  * Displays a context menu for the selected node in the graph
  * @param {MenuItem[]} items The items to display in the contextual menu
  */
 var showContextMenu = function (options) { return function (event) {
-    var selectedNodes = event.cy.nodes(":selected");
+    var selectedNode = event.target;
     var container = event.cy.container();
     if (container) {
-        if (selectedNodes.length === 1) {
-            // update current target
-            currentTarget = selectedNodes[0];
-            if (options.conditions.overall(currentTarget)) {
-                var menuContainer = document.getElementById("menu-container");
-                // this is where we show the context menu
-                var containerBoundingBox = container.getBoundingClientRect();
-                // This is the position relative to which we will show the menu
-                nodeBoundingBox = currentTarget.renderedBoundingBox({});
-                // create a container for the menu
-                if (!menuContainer) {
-                    menuContainer = createElement({
-                        tag: "div",
-                        classes: "menu-container",
-                        id: "menu-container",
-                        styles: {
-                            position: "absolute",
-                            left: containerBoundingBox.left + "px",
-                            top: containerBoundingBox.top + "px",
-                            width: containerBoundingBox.width + "px",
-                            height: containerBoundingBox.height + "px",
-                            zIndex: "10"
-                        }
-                    });
-                }
-                // set styles for the menu
-                var menu = createMenu(options);
-                menuContainer.appendChild(menu);
-                menuContainer.onclick = function (e) {
-                    e.stopImmediatePropagation();
+        // update current target
+        if (currentTarget) {
+            if (currentTarget.data("title") !== selectedNode.data("title")) {
+                if (menuIsCurrentlyVisible) {
                     removeMenu(true);
-                };
-                // show the menu
-                document.body.appendChild(menuContainer);
-                // animate the menu
-                animateMenuItems();
+                    window.setTimeout(function () {
+                        currentTarget = selectedNode;
+                        displayMenu(options);
+                    }, ANIMATION_DURATION / 2);
+                }
             }
-            else {
-                currentTarget.unselect();
-            }
+        }
+        else {
+            currentTarget = selectedNode;
+            displayMenu(options);
         }
     }
 }; };
+var displayMenu = function (options) {
+    if (options.conditions.overall(currentTarget)) {
+        // This is the position relative to which we will show the menu
+        nodeBoundingBox = currentTarget.renderedBoundingBox({});
+        // create a container for the menu
+        var menuContainer = createElement({
+            tag: "div",
+            classes: "menu-container",
+            id: "menu-container",
+            styles: {
+                position: "absolute",
+                left: nodeBoundingBox.x1 - 32 + "px",
+                top: nodeBoundingBox.y1 - 32 + "px",
+                width: nodeBoundingBox.w + 64 + "px",
+                height: nodeBoundingBox.h + 64 + "px",
+                zIndex: "100",
+            }
+        });
+        // Add menu
+        menuContainer.appendChild(createMenu(options));
+        // add click handler
+        menuContainer.onclick = function (e) {
+            e.stopImmediatePropagation();
+            removeMenu(true);
+        };
+        // show the menu
+        document.body.appendChild(menuContainer);
+        // animate the menu
+        animateMenuItems();
+    }
+    else {
+        currentTarget.unselect();
+    }
+};
 /**
  * Hides the context menu and deselects the selected element
  * @param {EventObject} event The Cytoscape event that triggered the function
@@ -124,17 +134,21 @@ var hideContextMenu = function (event) { return removeMenu(true); };
  */
 var removeMenu = function (unselectTarget) {
     if (unselectTarget === void 0) { unselectTarget = false; }
-    var menuContainer = document.getElementById("menu-container");
-    if (menuContainer) {
-        unanimateMenuItems();
-        window.setTimeout(function () {
-            if (menuContainer) {
-                document.body.removeChild(menuContainer);
-                if (currentTarget && unselectTarget) {
-                    currentTarget.unselect();
+    if (menuIsCurrentlyVisible) {
+        menuIsCurrentlyVisible = false;
+        var menuContainer_1 = document.getElementById("menu-container");
+        if (menuContainer_1) {
+            unanimateMenuItems();
+            window.setTimeout(function () {
+                if (menuContainer_1) {
+                    document.body.removeChild(menuContainer_1);
+                    if (currentTarget && unselectTarget) {
+                        currentTarget.unselect();
+                        currentTarget = null;
+                    }
                 }
-            }
-        }, ANIMATION_DURATION / 2);
+            }, ANIMATION_DURATION / 2);
+        }
     }
 };
 /**
@@ -147,7 +161,12 @@ var createMenu = function (options) {
     // Holder for all the elements of the context menu
     var menu = createElement({
         tag: "div",
-        id: "menu"
+        id: "menu",
+        styles: {
+            position: "relative",
+            width: "inherit",
+            height: "inherit",
+        }
     });
     var bounds = getBounds();
     // Create menu items
@@ -157,9 +176,7 @@ var createMenu = function (options) {
         var menuItem = createElement({
             tag: "div",
             classes: "menu-item",
-            styles: __assign({ display: "flex", alignItems: "center", justifyContent: "center", width: "56px", height: "56px", borderRadius: "50%", 
-                // border: `2px solid ${isItemInteractable ? item.color : "#d8d8d8"}`,
-                boxShadow: "0px 0px 16px 8px rgba(0, 0, 0, 0.16)", backgroundColor: isItemInteractable ? "#ffffff" : "#d8d8d8", cursor: isItemInteractable ? "pointer" : "not-allowed", position: "absolute", zIndex: "10" }, getPositionForItemWithIndex(index, items.length, bounds))
+            styles: __assign({ display: "flex", alignItems: "center", justifyContent: "center", width: "56px", height: "56px", borderRadius: "50%", color: "#000", boxShadow: "0px 0px 16px 8px rgba(0, 0, 0, 0.16)", backgroundColor: isItemInteractable ? "#ffffff" : "#d8d8d8", cursor: isItemInteractable ? "pointer" : "not-allowed", position: "absolute", zIndex: "10" }, getPositionForItemWithIndex(index, items.length, bounds))
         });
         // create icon
         if (item.icon) {
@@ -209,16 +226,16 @@ var getCloseButton = function (icon) {
             width: "32px",
             height: "32px",
             position: "absolute",
-            left: nodeBoundingBox.x1 + nodeBoundingBox.w / 2 + 20 + "px",
-            top: nodeBoundingBox.y1 + nodeBoundingBox.h / 2 - 16 + "px",
+            left: nodeBoundingBox.w / 2 + 20 + "px",
+            top: nodeBoundingBox.h / 2 + 16 + "px",
             backgroundColor: "#d8d8d8",
             cursor: "pointer",
             borderRadius: "50%",
-            boxShadow: "0px 0px 16px 8px rgba(0, 0, 0, 0.32)",
+            boxShadow: "0px 0px 16px 8px rgba(0, 0, 0, 0.16)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            opacity: "1"
+            opacity: "1",
         }
     });
     // add icon
@@ -241,8 +258,8 @@ var getBounds = function () {
     var r = nodeBoundingBox.w / 2;
     return {
         center: {
-            x: nodeBoundingBox.x1 + nodeBoundingBox.w / 2,
-            y: nodeBoundingBox.y1 + nodeBoundingBox.h / 2
+            x: nodeBoundingBox.w / 2,
+            y: nodeBoundingBox.h / 2
         },
         radius: r < 80 ? 80 : r > 120 ? 120 : r
     };
@@ -257,7 +274,7 @@ var getPositionForItemWithIndex = function (index, numberOfItems, bounds) {
     var angle = (numberOfItems % 2 === 0 ? -45 : -22.5) * (numberOfItems - 1 - (2 * index)) * Math.PI / 180;
     var calculatedPosition = {
         left: bounds.center.x + bounds.radius * Math.cos(angle),
-        top: bounds.center.y + bounds.radius * Math.sin(angle) - 28
+        top: bounds.center.y + bounds.radius * Math.sin(angle)
     };
     return {
         left: calculatedPosition.left + "px",
@@ -266,6 +283,7 @@ var getPositionForItemWithIndex = function (index, numberOfItems, bounds) {
 };
 /** Animates each menu item from their initial to final position */
 var animateMenuItems = function () {
+    menuIsCurrentlyVisible = true;
     var menuItems = document.querySelectorAll(".menu-item");
     var closeButton = document.getElementById("close-button");
     var bounds = getBounds();
@@ -273,8 +291,8 @@ var animateMenuItems = function () {
         menuItem.animate([
             {
                 opacity: 0,
-                left: nodeBoundingBox.x1 + nodeBoundingBox.w / 2 - 28 + "px",
-                top: nodeBoundingBox.y1 + nodeBoundingBox.h / 2 - 28 + "px"
+                left: nodeBoundingBox.w / 2 + "px",
+                top: nodeBoundingBox.h / 2 + "px"
             },
             __assign({ opacity: 1 }, getPositionForItemWithIndex(index, menuItems.length, bounds)),
         ], {
@@ -286,11 +304,11 @@ var animateMenuItems = function () {
     closeButton.animate([
         {
             opacity: "0",
-            left: nodeBoundingBox.x1 + nodeBoundingBox.w / 2 - 16 + "px",
+            left: nodeBoundingBox.w / 2 - 20 + "px",
         },
         {
             opacity: "1",
-            left: nodeBoundingBox.x1 + nodeBoundingBox.w / 2 + 20 + "px",
+            left: nodeBoundingBox.w / 2 + 20 + "px",
         }
     ], {
         duration: ANIMATION_DURATION,
@@ -308,8 +326,8 @@ var unanimateMenuItems = function () {
             __assign({ opacity: 1 }, getPositionForItemWithIndex(index, menuItems.length, bounds)),
             {
                 opacity: 0,
-                left: nodeBoundingBox.x1 + nodeBoundingBox.w / 2 - 28 + "px",
-                top: nodeBoundingBox.y1 + nodeBoundingBox.h / 2 - 28 + "px"
+                left: nodeBoundingBox.w / 2 + "px",
+                top: nodeBoundingBox.h / 2 + "px"
             }
         ], {
             duration: ANIMATION_DURATION / 2,
@@ -320,11 +338,11 @@ var unanimateMenuItems = function () {
     closeButton.animate([
         {
             opacity: "1",
-            left: nodeBoundingBox.x1 + nodeBoundingBox.w / 2 + 20 + "px",
+            left: nodeBoundingBox.w / 2 + 20 + "px",
         },
         {
             opacity: "0",
-            left: nodeBoundingBox.x1 + nodeBoundingBox.w / 2 - 16 + "px",
+            left: nodeBoundingBox.w / 2 - 20 + "px",
         }
     ], {
         duration: ANIMATION_DURATION / 2,
