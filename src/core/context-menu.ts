@@ -24,9 +24,6 @@ export const showContextMenu = (options: Options): EventHandler => (
       if (options.conditions.overall(currentTarget)) {
         let menuContainer = document.getElementById("menu-container");
 
-        // this is where we show the context menu
-        const containerBoundingBox = container.getBoundingClientRect();
-
         // This is the position relative to which we will show the menu
         nodeBoundingBox = currentTarget.renderedBoundingBox({}) as BoundingBoxWH
 
@@ -38,11 +35,11 @@ export const showContextMenu = (options: Options): EventHandler => (
             id: "menu-container",
             styles: {
               position: "absolute",
-              left: `${containerBoundingBox.left}px`,
-              top: `${containerBoundingBox.top}px`,
-              width: `${containerBoundingBox.width}px`,
-              height: `${containerBoundingBox.height}px`,
-              zIndex: "10"
+              left: `${nodeBoundingBox.x1 - 32}px`,
+              top: `${nodeBoundingBox.y1 - 32}px`,
+              width: `${nodeBoundingBox.w + 64}px`,
+              height: `${nodeBoundingBox.h + 64}px`,
+              zIndex: "10",
             }
           });
         }
@@ -109,7 +106,14 @@ export const createMenu = (options: Options): HTMLElement => {
   // Holder for all the elements of the context menu
   const menu = createElement({
     tag: "div",
-    id: "menu"
+    id: "menu",
+    styles: {
+      position: "relative",
+      width: "inherit",
+      height: "inherit",
+      backgroundColor: "white",
+      zIndex: "20",
+    }
   });
 
   const bounds = getBounds();
@@ -128,7 +132,8 @@ export const createMenu = (options: Options): HTMLElement => {
         width: "56px",
         height: "56px",
         borderRadius: "50%",
-        // border: `2px solid ${isItemInteractable ? item.color : "#d8d8d8"}`,
+        border: "1px solid #000",
+        color: "#000",
         boxShadow: "0px 0px 16px 8px rgba(0, 0, 0, 0.16)",
         backgroundColor: isItemInteractable ? "#ffffff" : "#d8d8d8",
         cursor: isItemInteractable ? "pointer" : "not-allowed",
@@ -192,8 +197,8 @@ const getCloseButton = (icon: any): HTMLElement => {
       width: "32px",
       height: "32px",
       position: "absolute",
-      left: `${nodeBoundingBox!.x1 + nodeBoundingBox!.w / 2 + 20}px`,
-      top: `${nodeBoundingBox!.y1 + nodeBoundingBox!.h / 2 - 16}px`,
+      left: `${nodeBoundingBox!.w / 2 + 20}px`,
+      top: `${nodeBoundingBox!.h / 2 + 16}px`,
       backgroundColor: "#d8d8d8",
       cursor: "pointer",
       borderRadius: "50%",
@@ -201,7 +206,8 @@ const getCloseButton = (icon: any): HTMLElement => {
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      opacity: "1"
+      opacity: "1",
+      border: "1px solid #000"
     }
   })
 
@@ -235,10 +241,11 @@ interface Bounds {
  */
 const getBounds = (): Bounds => {
   const r = nodeBoundingBox!.w / 2
+
   return {
     center: {
-      x: nodeBoundingBox!.x1 + nodeBoundingBox!.w / 2,
-      y: nodeBoundingBox!.y1 + nodeBoundingBox!.h / 2
+      x: nodeBoundingBox!.w / 2,
+      y: nodeBoundingBox!.h / 2
     },
     radius: r < 80 ? 80 : r > 120 ? 120 : r
   }
@@ -255,7 +262,7 @@ const getPositionForItemWithIndex = (index: number, numberOfItems: number, bound
 
   const calculatedPosition = {
     left: bounds.center.x + bounds.radius * Math.cos(angle),
-    top: bounds.center.y + bounds.radius * Math.sin(angle) - 28
+    top: bounds.center.y + bounds.radius * Math.sin(angle)
   }
 
   return {
@@ -275,8 +282,8 @@ const animateMenuItems = () => {
     menuItem.animate([
       {
         opacity: 0,
-        left: `${nodeBoundingBox!.x1 + nodeBoundingBox!.w / 2 - 28}px`,
-        top: `${nodeBoundingBox!.y1 + nodeBoundingBox!.h / 2 - 28}px`
+        left: `${nodeBoundingBox!.w / 2}px`,
+        top: `${nodeBoundingBox!.h / 2}px`
       },
       {
         opacity: 1,
@@ -292,11 +299,11 @@ const animateMenuItems = () => {
   closeButton.animate([
     {
       opacity: "0",
-      left: `${nodeBoundingBox!.x1 + nodeBoundingBox!.w / 2 - 16}px`,
+      left: `${nodeBoundingBox!.w / 2 - 20}px`,
     },
     {
       opacity: "1",
-      left: `${nodeBoundingBox!.x1 + nodeBoundingBox!.w / 2 + 20}px`,
+      left: `${nodeBoundingBox!.w / 2 + 20}px`,
     }
   ], {
       duration: ANIMATION_DURATION,
@@ -320,8 +327,8 @@ const unanimateMenuItems = () => {
       },
       {
         opacity: 0,
-        left: `${nodeBoundingBox!.x1 + nodeBoundingBox!.w / 2 - 28}px`,
-        top: `${nodeBoundingBox!.y1 + nodeBoundingBox!.h / 2 - 28}px`
+        left: `${nodeBoundingBox!.w / 2}px`,
+        top: `${nodeBoundingBox!.h / 2}px`
       }
     ], {
         duration: ANIMATION_DURATION / 2,
@@ -333,11 +340,11 @@ const unanimateMenuItems = () => {
   closeButton.animate([
     {
       opacity: "1",
-      left: `${nodeBoundingBox!.x1 + nodeBoundingBox!.w / 2 + 20}px`,
+      left: `${nodeBoundingBox!.w / 2 + 20}px`,
     },
     {
       opacity: "0",
-      left: `${nodeBoundingBox!.x1 + nodeBoundingBox!.w / 2 - 16}px`,
+      left: `${nodeBoundingBox!.w / 2 - 20}px`,
     }
   ], {
       duration: ANIMATION_DURATION / 2,
