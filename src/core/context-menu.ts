@@ -1,10 +1,11 @@
 import { BoundingBoxWH, EventHandler, EventObject, NodeSingular } from "cytoscape";
-import { MenuItem, Options } from ".";
+import { Options } from ".";
 import { createElement } from "./dom-utils";
 
 const ANIMATION_DURATION = 150
 let currentTarget: NodeSingular | null = null
 let nodeBoundingBox: BoundingBoxWH | null = null
+let menuIsCurrentlyVisible: boolean = false
 
 /**
  * Displays a context menu for the selected node in the graph
@@ -13,59 +14,67 @@ let nodeBoundingBox: BoundingBoxWH | null = null
 export const showContextMenu = (options: Options): EventHandler => (
   event: EventObject
 ): void => {
-  const selectedNodes = event.cy.nodes(":selected");
+  const selectedNode = event.target;
   const container = event.cy.container();
 
   if (container) {
-    if (selectedNodes.length === 1) {
-      // update current target
-      currentTarget = selectedNodes[0];
-
-      if (options.conditions.overall(currentTarget)) {
-        let menuContainer = document.getElementById("menu-container");
-
-        // This is the position relative to which we will show the menu
-        nodeBoundingBox = currentTarget.renderedBoundingBox({}) as BoundingBoxWH
-
-        // create a container for the menu
-        if (!menuContainer) {
-          menuContainer = createElement({
-            tag: "div",
-            classes: "menu-container",
-            id: "menu-container",
-            styles: {
-              position: "absolute",
-              left: `${nodeBoundingBox.x1 - 32}px`,
-              top: `${nodeBoundingBox.y1 - 32}px`,
-              width: `${nodeBoundingBox.w + 64}px`,
-              height: `${nodeBoundingBox.h + 64}px`,
-              zIndex: "10",
-            }
-          });
+    // update current target
+    if (currentTarget) {
+      if (currentTarget.data("title") !== selectedNode.data("title")) {
+        if (menuIsCurrentlyVisible) {
+          removeMenu(true)
+          window.setTimeout(() => {
+            currentTarget = selectedNode as NodeSingular
+            displayMenu(options)
+          }, ANIMATION_DURATION / 2)
         }
-
-        // set styles for the menu
-        const menu = createMenu(options);
-
-        menuContainer.appendChild(menu);
-
-        menuContainer.onclick = (e) => {
-          e.stopImmediatePropagation();
-
-          removeMenu(true);
-        }
-
-        // show the menu
-        document.body.appendChild(menuContainer);
-
-        // animate the menu
-        animateMenuItems()
-      } else {
-        currentTarget.unselect();
       }
+    } else {
+      currentTarget = selectedNode as NodeSingular
+      displayMenu(options)
     }
   }
 };
+
+const displayMenu = (options: Options) => {
+  if (options.conditions.overall(currentTarget!)) {
+    // This is the position relative to which we will show the menu
+    nodeBoundingBox = currentTarget!.renderedBoundingBox({}) as BoundingBoxWH
+
+    // create a container for the menu
+    const menuContainer = createElement({
+      tag: "div",
+      classes: "menu-container",
+      id: "menu-container",
+      styles: {
+        position: "absolute",
+        left: `${nodeBoundingBox.x1 - 32}px`,
+        top: `${nodeBoundingBox.y1 - 32}px`,
+        width: `${nodeBoundingBox.w + 64}px`,
+        height: `${nodeBoundingBox.h + 64}px`,
+        zIndex: "100",
+      }
+    });
+
+    // Add menu
+    menuContainer.appendChild(createMenu(options));
+
+    // add click handler
+    menuContainer.onclick = (e) => {
+      e.stopImmediatePropagation();
+
+      removeMenu(true);
+    }
+
+    // show the menu
+    document.body.appendChild(menuContainer);
+
+    // animate the menu
+    animateMenuItems()
+  } else {
+    currentTarget!.unselect();
+  }
+}
 
 /**
  * Hides the context menu and deselects the selected element
@@ -78,20 +87,24 @@ export const hideContextMenu: EventHandler = (event) => removeMenu(true)
  * @param {boolean} unselectTarget Whether or not to unselect the selected element
  */
 const removeMenu = (unselectTarget: boolean = false) => {
+  if (menuIsCurrentlyVisible) {
+    menuIsCurrentlyVisible = false;
 
-  const menuContainer = document.getElementById("menu-container");
+    const menuContainer = document.getElementById("menu-container");
 
-  if (menuContainer) {
-    unanimateMenuItems();
+    if (menuContainer) {
+      unanimateMenuItems();
 
-    window.setTimeout(() => {
-      if (menuContainer) {
-        document.body.removeChild(menuContainer);
-        if (currentTarget && unselectTarget) {
-          currentTarget.unselect();
+      window.setTimeout(() => {
+        if (menuContainer) {
+          document.body.removeChild(menuContainer);
+          if (currentTarget && unselectTarget) {
+            currentTarget.unselect();
+            currentTarget = null;
+          }
         }
-      }
-    }, ANIMATION_DURATION / 2)
+      }, ANIMATION_DURATION / 2)
+    }
   }
 }
 
@@ -111,8 +124,6 @@ export const createMenu = (options: Options): HTMLElement => {
       position: "relative",
       width: "inherit",
       height: "inherit",
-      backgroundColor: "white",
-      zIndex: "20",
     }
   });
 
@@ -132,7 +143,6 @@ export const createMenu = (options: Options): HTMLElement => {
         width: "56px",
         height: "56px",
         borderRadius: "50%",
-        border: "1px solid #000",
         color: "#000",
         boxShadow: "0px 0px 16px 8px rgba(0, 0, 0, 0.16)",
         backgroundColor: isItemInteractable ? "#ffffff" : "#d8d8d8",
@@ -202,12 +212,11 @@ const getCloseButton = (icon: any): HTMLElement => {
       backgroundColor: "#d8d8d8",
       cursor: "pointer",
       borderRadius: "50%",
-      boxShadow: "0px 0px 16px 8px rgba(0, 0, 0, 0.32)",
+      boxShadow: "0px 0px 16px 8px rgba(0, 0, 0, 0.16)",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
       opacity: "1",
-      border: "1px solid #000"
     }
   })
 
@@ -273,6 +282,7 @@ const getPositionForItemWithIndex = (index: number, numberOfItems: number, bound
 
 /** Animates each menu item from their initial to final position */
 const animateMenuItems = () => {
+  menuIsCurrentlyVisible = true;
   const menuItems = document.querySelectorAll(".menu-item");
   const closeButton = document.getElementById("close-button") as HTMLDivElement
 

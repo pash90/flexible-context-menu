@@ -39,8 +39,7 @@ export interface Options {
  */
 export default function extension(this: Core, options: Options): Core {
   // Event listener to show the menu
-  // this.on("singleclick", "node", showContextMenu(options));
-  this.on("click", "node", showContextMenu(options));
+  this.on("singleclick", "node", showContextMenu(options));
 
   // Event listeners to hide the menu
   this.on("drag zoom pan", hideContextMenu);
