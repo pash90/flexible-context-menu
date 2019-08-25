@@ -1,5 +1,9 @@
 # Changelog
 
+## August 26, 2019 - 1.0.6
+
+- Ensured that the menu is positioned relative to the graph container and not the window
+
 ## August 23, 2019 - 1.0.5
 
 - Can select another node without having to close exiting menu first
