@@ -6,6 +6,7 @@ const ANIMATION_DURATION = 150
 let currentTarget: NodeSingular | null = null
 let nodeBoundingBox: BoundingBoxWH | null = null
 let menuIsCurrentlyVisible: boolean = false
+let containerRect: DOMRect | null
 
 /**
  * Displays a context menu for the selected node in the graph
@@ -15,9 +16,10 @@ export const showContextMenu = (options: Options): EventHandler => (
   event: EventObject
 ): void => {
   const selectedNode = event.target;
-  const container = event.cy.container();
 
-  if (container) {
+  if (event.cy.container()) {
+    containerRect = (event.cy.container() as HTMLDivElement).getBoundingClientRect() as DOMRect
+
     // update current target
     if (currentTarget) {
       if (currentTarget.data("title") !== selectedNode.data("title")) {
@@ -111,7 +113,6 @@ const removeMenu = (unselectTarget: boolean = false) => {
 /**
  * Creates a contextual menu for the selected node
  * @param {Options} options
- * @param {BoundingBoxWH} boundingBox The bounding box for the selected node in the graph
  */
 export const createMenu = (options: Options): HTMLElement => {
   const { items, closeIcon, conditions: { menuItem: condition } } = options;
@@ -207,8 +208,8 @@ const getCloseButton = (icon: any): HTMLElement => {
       width: "32px",
       height: "32px",
       position: "absolute",
-      left: `${nodeBoundingBox!.w / 2 + 20}px`,
-      top: `${nodeBoundingBox!.h / 2 + 16}px`,
+      left: `${containerRect!.left + nodeBoundingBox!.w / 2 + 20}px`,
+      top: `${containerRect!.top + nodeBoundingBox!.h / 2 + 16}px`,
       backgroundColor: "#d8d8d8",
       cursor: "pointer",
       borderRadius: "50%",
@@ -270,8 +271,8 @@ const getPositionForItemWithIndex = (index: number, numberOfItems: number, bound
   const angle = (numberOfItems % 2 === 0 ? -45 : -22.5) * (numberOfItems - 1 - (2 * index)) * Math.PI / 180
 
   const calculatedPosition = {
-    left: bounds.center.x + bounds.radius * Math.cos(angle),
-    top: bounds.center.y + bounds.radius * Math.sin(angle)
+    left: containerRect!.left + bounds.center.x + bounds.radius * Math.cos(angle),
+    top: containerRect!.top + bounds.center.y + bounds.radius * Math.sin(angle)
   }
 
   return {
@@ -292,8 +293,8 @@ const animateMenuItems = () => {
     menuItem.animate([
       {
         opacity: 0,
-        left: `${nodeBoundingBox!.w / 2}px`,
-        top: `${nodeBoundingBox!.h / 2}px`
+        left: `${containerRect!.left + nodeBoundingBox!.w / 2}px`,
+        top: `${containerRect!.top + nodeBoundingBox!.h / 2}px`
       },
       {
         opacity: 1,
@@ -309,11 +310,11 @@ const animateMenuItems = () => {
   closeButton.animate([
     {
       opacity: "0",
-      left: `${nodeBoundingBox!.w / 2 - 20}px`,
+      left: `${containerRect!.left + (nodeBoundingBox!.w / 2) - 20}px`,
     },
     {
       opacity: "1",
-      left: `${nodeBoundingBox!.w / 2 + 20}px`,
+      left: `${containerRect!.left + nodeBoundingBox!.w / 2 + 20}px`,
     }
   ], {
       duration: ANIMATION_DURATION,
@@ -337,8 +338,8 @@ const unanimateMenuItems = () => {
       },
       {
         opacity: 0,
-        left: `${nodeBoundingBox!.w / 2}px`,
-        top: `${nodeBoundingBox!.h / 2}px`
+        left: `${containerRect!.left + nodeBoundingBox!.w / 2}px`,
+        top: `${containerRect!.top + nodeBoundingBox!.h / 2}px`
       }
     ], {
         duration: ANIMATION_DURATION / 2,
@@ -350,11 +351,11 @@ const unanimateMenuItems = () => {
   closeButton.animate([
     {
       opacity: "1",
-      left: `${nodeBoundingBox!.w / 2 + 20}px`,
+      left: `${containerRect!.left + nodeBoundingBox!.w / 2 + 20}px`,
     },
     {
       opacity: "0",
-      left: `${nodeBoundingBox!.w / 2 - 20}px`,
+      left: `${containerRect!.left + nodeBoundingBox!.w / 2 - 20}px`,
     }
   ], {
       duration: ANIMATION_DURATION / 2,
