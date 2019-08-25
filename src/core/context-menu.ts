@@ -178,7 +178,7 @@ export const createMenu = (options: Options): HTMLElement => {
         e.stopImmediatePropagation();
 
         // remove the menu
-        removeMenu();
+        removeMenu(true);
 
         // invoke
         window.setTimeout(item.onClick, ANIMATION_DURATION / 2)
