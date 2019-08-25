@@ -13,6 +13,5 @@ export declare const hideContextMenu: EventHandler;
 /**
  * Creates a contextual menu for the selected node
  * @param {Options} options
- * @param {BoundingBoxWH} boundingBox The bounding box for the selected node in the graph
  */
 export declare const createMenu: (options: Options) => HTMLElement;

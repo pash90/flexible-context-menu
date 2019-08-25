@@ -67,14 +67,15 @@
     var currentTarget = null;
     var nodeBoundingBox = null;
     var menuIsCurrentlyVisible = false;
+    var containerRect;
     /**
      * Displays a context menu for the selected node in the graph
      * @param {MenuItem[]} items The items to display in the contextual menu
      */
     var showContextMenu = function (options) { return function (event) {
         var selectedNode = event.target;
-        var container = event.cy.container();
-        if (container) {
+        if (event.cy.container()) {
+            containerRect = event.cy.container().getBoundingClientRect();
             // update current target
             if (currentTarget) {
                 if (currentTarget.data("title") !== selectedNode.data("title")) {
@@ -158,7 +159,6 @@
     /**
      * Creates a contextual menu for the selected node
      * @param {Options} options
-     * @param {BoundingBoxWH} boundingBox The bounding box for the selected node in the graph
      */
     var createMenu = function (options) {
         var items = options.items, closeIcon = options.closeIcon, condition = options.conditions.menuItem;
@@ -230,8 +230,8 @@
                 width: "32px",
                 height: "32px",
                 position: "absolute",
-                left: nodeBoundingBox.w / 2 + 20 + "px",
-                top: nodeBoundingBox.h / 2 + 16 + "px",
+                left: containerRect.left + nodeBoundingBox.w / 2 + 20 + "px",
+                top: containerRect.top + nodeBoundingBox.h / 2 + 16 + "px",
                 backgroundColor: "#d8d8d8",
                 cursor: "pointer",
                 borderRadius: "50%",
@@ -277,8 +277,8 @@
     var getPositionForItemWithIndex = function (index, numberOfItems, bounds) {
         var angle = (numberOfItems % 2 === 0 ? -45 : -22.5) * (numberOfItems - 1 - (2 * index)) * Math.PI / 180;
         var calculatedPosition = {
-            left: bounds.center.x + bounds.radius * Math.cos(angle),
-            top: bounds.center.y + bounds.radius * Math.sin(angle)
+            left: containerRect.left + bounds.center.x + bounds.radius * Math.cos(angle),
+            top: containerRect.top + bounds.center.y + bounds.radius * Math.sin(angle)
         };
         return {
             left: calculatedPosition.left + "px",
@@ -295,8 +295,8 @@
             menuItem.animate([
                 {
                     opacity: 0,
-                    left: nodeBoundingBox.w / 2 + "px",
-                    top: nodeBoundingBox.h / 2 + "px"
+                    left: containerRect.left + nodeBoundingBox.w / 2 + "px",
+                    top: containerRect.top + nodeBoundingBox.h / 2 + "px"
                 },
                 __assign({ opacity: 1 }, getPositionForItemWithIndex(index, menuItems.length, bounds)),
             ], {
@@ -308,11 +308,11 @@
         closeButton.animate([
             {
                 opacity: "0",
-                left: nodeBoundingBox.w / 2 - 20 + "px",
+                left: containerRect.left + (nodeBoundingBox.w / 2) - 20 + "px",
             },
             {
                 opacity: "1",
-                left: nodeBoundingBox.w / 2 + 20 + "px",
+                left: containerRect.left + nodeBoundingBox.w / 2 + 20 + "px",
             }
         ], {
             duration: ANIMATION_DURATION,
@@ -330,8 +330,8 @@
                 __assign({ opacity: 1 }, getPositionForItemWithIndex(index, menuItems.length, bounds)),
                 {
                     opacity: 0,
-                    left: nodeBoundingBox.w / 2 + "px",
-                    top: nodeBoundingBox.h / 2 + "px"
+                    left: containerRect.left + nodeBoundingBox.w / 2 + "px",
+                    top: containerRect.top + nodeBoundingBox.h / 2 + "px"
                 }
             ], {
                 duration: ANIMATION_DURATION / 2,
@@ -342,11 +342,11 @@
         closeButton.animate([
             {
                 opacity: "1",
-                left: nodeBoundingBox.w / 2 + 20 + "px",
+                left: containerRect.left + nodeBoundingBox.w / 2 + 20 + "px",
             },
             {
                 opacity: "0",
-                left: nodeBoundingBox.w / 2 - 20 + "px",
+                left: containerRect.left + nodeBoundingBox.w / 2 - 20 + "px",
             }
         ], {
             duration: ANIMATION_DURATION / 2,
@@ -367,6 +367,7 @@
     function extension(options) {
         // Event listener to show the menu
         this.on("singleclick", "node", showContextMenu(options));
+        // this.on("click", "node", showContextMenu(options));
         // Event listeners to hide the menu
         this.on("drag zoom pan", hideContextMenu);
         this.on("click", function (e) {
