@@ -1,5 +1,9 @@
 # Changelog
 
+## August 26, 2019 - 1.0.7
+
+- Selected node gets unselected after actioning item from context menu
+
 ## August 26, 2019 - 1.0.6
 
 - Ensured that the menu is positioned relative to the graph container and not the window
