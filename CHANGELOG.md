@@ -1,5 +1,9 @@
 # Changelog
 
+## August 26, 2019 - 1.0.8
+
+- Minor fixes
+
 ## August 26, 2019 - 1.0.7
 
 - Selected node gets unselected after actioning item from context menu
