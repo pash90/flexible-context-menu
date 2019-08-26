@@ -88,6 +88,10 @@ var showContextMenu = function (options) { return function (event) {
                     displayMenu(options);
                 }
             }
+            else if (!menuIsCurrentlyVisible) {
+                currentTarget = selectedNode;
+                displayMenu(options);
+            }
         }
         else {
             currentTarget = selectedNode;

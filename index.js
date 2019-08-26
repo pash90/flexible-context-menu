@@ -92,6 +92,10 @@
                         displayMenu(options);
                     }
                 }
+                else if (!menuIsCurrentlyVisible) {
+                    currentTarget = selectedNode;
+                    displayMenu(options);
+                }
             }
             else {
                 currentTarget = selectedNode;
