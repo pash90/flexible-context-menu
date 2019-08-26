@@ -34,6 +34,9 @@ export const showContextMenu = (options: Options): EventHandler => (
           currentTarget = selectedNode as NodeSingular
           displayMenu(options)
         }
+      } else if (!menuIsCurrentlyVisible) {
+        currentTarget = selectedNode as NodeSingular
+        displayMenu(options)
       }
     } else {
       currentTarget = selectedNode as NodeSingular
