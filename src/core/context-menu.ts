@@ -16,8 +16,9 @@ export const showContextMenu = (options: Options): EventHandler => (
   event: EventObject
 ): void => {
   const selectedNode = event.target;
+  const isValidSelection = selectedNode.data("classes") !== "external" && !!event.cy.container()
 
-  if (event.cy.container()) {
+  if (isValidSelection) {
     containerRect = (event.cy.container() as HTMLDivElement).getBoundingClientRect() as DOMRect
 
     // update current target
@@ -29,12 +30,18 @@ export const showContextMenu = (options: Options): EventHandler => (
             currentTarget = selectedNode as NodeSingular
             displayMenu(options)
           }, ANIMATION_DURATION / 2)
+        } else {
+          currentTarget = selectedNode as NodeSingular
+          displayMenu(options)
         }
       }
     } else {
       currentTarget = selectedNode as NodeSingular
       displayMenu(options)
     }
+  } else {
+    removeMenu(true);
+    selectedNode.unselect();
   }
 };
 
@@ -362,11 +369,4 @@ const unanimateMenuItems = () => {
       direction: "normal",
       easing: "ease-in-out"
     })
-}
-
-export const clearContextMenu = () => {
-  currentTarget = null
-  nodeBoundingBox = null
-  menuIsCurrentlyVisible = false
-  containerRect = null
 }
