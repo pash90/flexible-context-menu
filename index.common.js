@@ -72,7 +72,8 @@ var containerRect;
  */
 var showContextMenu = function (options) { return function (event) {
     var selectedNode = event.target;
-    if (event.cy.container()) {
+    var isValidSelection = selectedNode.data("classes") !== "external" && !!event.cy.container();
+    if (isValidSelection) {
         containerRect = event.cy.container().getBoundingClientRect();
         // update current target
         if (currentTarget) {
@@ -84,12 +85,20 @@ var showContextMenu = function (options) { return function (event) {
                         displayMenu(options);
                     }, ANIMATION_DURATION / 2);
                 }
+                else {
+                    currentTarget = selectedNode;
+                    displayMenu(options);
+                }
             }
         }
         else {
             currentTarget = selectedNode;
             displayMenu(options);
         }
+    }
+    else {
+        removeMenu(true);
+        selectedNode.unselect();
     }
 }; };
 var displayMenu = function (options) {
@@ -373,6 +382,7 @@ function extension(options) {
             hideContextMenu();
         }
     });
+    this.on("destroy", hideContextMenu);
     return this;
 }
 
