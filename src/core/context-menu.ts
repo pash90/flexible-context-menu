@@ -181,7 +181,7 @@ export const createMenu = (options: Options): HTMLElement => {
         item.onClick();
 
         // remove the menu
-        removeMenu(true);
+        removeMenu();
       } :
       (e) => e.stopImmediatePropagation()
 
@@ -362,4 +362,11 @@ const unanimateMenuItems = () => {
       direction: "normal",
       easing: "ease-in-out"
     })
+}
+
+export const clearContextMenu = () => {
+  currentTarget = null
+  nodeBoundingBox = null
+  menuIsCurrentlyVisible = false
+  containerRect = null
 }
