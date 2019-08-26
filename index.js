@@ -207,7 +207,7 @@
                     // execute action
                     item.onClick();
                     // remove the menu
-                    removeMenu(true);
+                    removeMenu();
                 } :
                 function (e) { return e.stopImmediatePropagation(); };
             // add to container;
@@ -354,6 +354,12 @@
             easing: "ease-in-out"
         });
     };
+    var clearContextMenu = function () {
+        currentTarget = null;
+        nodeBoundingBox = null;
+        menuIsCurrentlyVisible = false;
+        containerRect = null;
+    };
 
     /**
      *
@@ -368,6 +374,7 @@
         // Event listener to show the menu
         this.on("singleclick", "node", showContextMenu(options));
         // this.on("click", "node", showContextMenu(options));
+        this.on("unselect", "node", clearContextMenu);
         // Event listeners to hide the menu
         this.on("drag zoom pan", hideContextMenu);
         this.on("click", function (e) {
