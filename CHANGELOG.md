@@ -1,5 +1,9 @@
 # Changelog
 
+## August 26, 2019 - 1.0.12
+
+- Ensured that the context menu always opens as long as the condition(s) is satisfied
+
 ## August 26, 2019 - 1.0.11
 
 - Minor enhancements
