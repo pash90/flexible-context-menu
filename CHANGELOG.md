@@ -1,5 +1,13 @@
 # Changelog
 
+## August 26, 2019 - 1.0.11
+
+- Minor enhancements
+
+## August 26, 2019 - 1.0.10
+
+- Minor fixes
+
 ## August 26, 2019 - 1.0.9
 
 - Minor fixes
