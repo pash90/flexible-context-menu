@@ -15,4 +15,3 @@ export declare const hideContextMenu: EventHandler;
  * @param {Options} options
  */
 export declare const createMenu: (options: Options) => HTMLElement;
-export declare const clearContextMenu: () => void;
