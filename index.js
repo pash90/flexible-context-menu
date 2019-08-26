@@ -204,10 +204,10 @@
             menuItem.onclick = isItemInteractable ?
                 function (e) {
                     e.stopImmediatePropagation();
+                    // execute action
+                    item.onClick();
                     // remove the menu
                     removeMenu(true);
-                    // invoke
-                    window.setTimeout(item.onClick, ANIMATION_DURATION / 2);
                 } :
                 function (e) { return e.stopImmediatePropagation(); };
             // add to container;
